@@ -3,10 +3,10 @@ from langchain_community.embeddings import OllamaEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 
-from parser import load_documents_into_database
 import sys
 
-from llm import getChatChain
+from rag import getChatChain
+from parser import load_documents_into_database
 
 
 def main(llm_model_name, embedding_model_name, documents_path):
