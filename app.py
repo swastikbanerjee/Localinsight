@@ -3,7 +3,7 @@ from langchain_community.embeddings import OllamaEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 
-from document_loader import load_documents_into_database
+from parse import load_documents_into_database
 import sys
 
 from llm import getChatChain
