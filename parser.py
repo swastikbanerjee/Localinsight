@@ -9,17 +9,16 @@ from langchain_community.document_loaders import (
     JSONLoader,
 )
 import os
-from typing import List
 from langchain_core.documents import Document
 from langchain_community.embeddings import OllamaEmbeddings
-from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
 
-TEXT_SPLITTER = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=0)
+TEXT_SPLITTER = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=0, add_start_index=True)
 PERSIST_DIRECTORY = "./chroma_db"  
 
 # returns a Chroma db object
-def load_documents_into_database(model_name: str, documents_path: str):
+def load_documents_into_database(model_name, documents_path):
     if os.path.exists(PERSIST_DIRECTORY):
         print("Loading embeddings from disk")
         db = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=OllamaEmbeddings(model=model_name))
@@ -29,13 +28,12 @@ def load_documents_into_database(model_name: str, documents_path: str):
         documents = TEXT_SPLITTER.split_documents(raw_documents)
         
         print("Creating embeddings and loading documents into Database")
-        db = Chroma.from_documents(documents, OllamaEmbeddings(model=model_name), persist_directory=PERSIST_DIRECTORY)
+        db = Chroma.from_documents(documents = documents, embedding =  OllamaEmbeddings(model=model_name), persist_directory=PERSIST_DIRECTORY)
         db.persist()  
 
     return db
 
-# returns a List fo `Document` objects
-def load_documents(path: str):
+def load_documents(path):
     if not os.path.exists(path):
         raise FileNotFoundError(f"The specified path does not exist: {path}")
 
