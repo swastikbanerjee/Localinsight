@@ -1,8 +1,9 @@
 import os
-from langchain.document_loaders import TextLoader, PyPDFLoader, UnstructuredPowerPointLoader
+from langchain_community.document_loaders import TextLoader, PyPDFLoader, UnstructuredPowerPointLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pprint import pprint
 import pandas as pd
+import speech_recognition as sr
 
 def process_text_file(file_path):
     loader = TextLoader(file_path, encoding="utf-8")
@@ -97,6 +98,51 @@ def process_xlsx_file(file_path):
         })
     return chunked_documents
 
+
+
+def process_audio_file(file_path):
+    file_extension = os.path.splitext(file_path)[1].lower()
+    
+    if file_extension not in ['.wav', '.mp3']:
+        return [{
+            "media_type": "unknown",
+            "class": "UnknownFile",
+            "properties": {"path": file_path}
+        }]
+    
+    recognizer = sr.Recognizer()
+    try:
+        with sr.AudioFile(file_path) as source:
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data)
+        
+        # Manually split the text into chunks
+        chunk_size = 1000
+        chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+        
+        chunked_documents = [
+            {
+                "media_type": "audio",
+                "class": "AudioTextChunk",
+                "properties": {
+                    "path": file_path,
+                    "text": chunk,
+                    "chunk_length": len(chunk),
+                }
+            }
+            for chunk in chunks
+        ]
+    except Exception as e:
+        print(f"Error processing audio file {file_path}: {e}")
+        return [{
+            "media_type": "unknown",
+            "class": "UnknownFile",
+            "properties": {"path": file_path}
+        }]
+    
+    return chunked_documents
+
+
 def process_file(file_path):
     file_extension = os.path.splitext(file_path)[1].lower()
 
@@ -108,6 +154,8 @@ def process_file(file_path):
         return process_pptx_file(file_path)
     elif file_extension in ['.xlsx','.xls']:
         return process_xlsx_file(file_path)
+    elif file_extension in ['.wav','.mp3']:
+        return process_audio_file(file_path)
     else:
         return [{
             "media_type": "unknown",
@@ -123,7 +171,10 @@ file_paths = [
     # "C:/Users/Anushka/Downloads/Geographicaldata.csv",
     # "C:/Users/Anushka/Downloads/example_1.json",
     #"C:/Users/Anushka/Downloads/Local_Insight_PPT.pptx",
-    "C:/Users/Anushka/Downloads/file_example_XLSX_10.xlsx"
+   # "C:/Users/Anushka/Downloads/file_example_XLSX_10.xlsx",
+   #"C:/Users/Anushka/Downloads/speech_output.mp3"
+   "C:/Users/Anushka/Downloads/female.wav"
+
 ]
 
 all_documents = []
