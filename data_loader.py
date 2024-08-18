@@ -1,4 +1,3 @@
-
 import os
 import base64
 from langchain_community.document_loaders import TextLoader
@@ -30,7 +29,7 @@ class DataLoader:
                 return base64.b64encode(file.read()).decode('utf-8')
             
         return {
-            "mediaType": "image",
+            "media_type": "image",
             "path": file_path,
             "image": to_base64(file_path)
             }
@@ -42,9 +41,14 @@ class DataLoader:
                 file_path = os.path.join(root, file_name)
 
                 if file_name.lower().endswith(".txt"):
-                    object_list.append(self.process_text_file(file_path))
+                    object_list.extend(self.process_text_file(file_path))
                 elif file_name.lower().endswith(".jpg"):
                     object_list.append(self.process_image_file(file_path))
         return object_list
+
+if __name__ == "__main__":
+    loader = DataLoader(r"C:\Users\swast\OneDrive\Desktop\runSwastik\Localinsight\documents")
+    object_list = loader.load_data()
+    print(object_list)
     
         
