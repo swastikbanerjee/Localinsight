@@ -15,15 +15,18 @@ class Database:
         self.client = weaviate.connect_to_local()
 
     def generate_collection(self):
-        self.collection = self.collection.create(
+        if self.client.collections.exists('TextCollection'):
+            self.collection = self.client.collections.get('TextCollection')
+            return
+        self.collection = self.client.collections.create(
             name="TextCollection",
             vectorizer_config=Configure.Vectorizer.text2vec_ollama(
                 api_endpoint="http://host.docker.internal:11434",
-                model="all-minilm"
+                model="nomic-embed-text"
             ),
             generative_config=Configure.Generative.ollama(
                 api_endpoint="http://host.docker.internal:11434",
-                model="tinyllama"
+                model="llama3.1"
             )
         )
     
