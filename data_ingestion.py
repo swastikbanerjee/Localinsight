@@ -107,9 +107,9 @@ def read_docx_file(file_path):
 def process_doc_file(file_path):
     try:
         text = read_doc_file(file_path)
-        documents = [{"page_content": text}]
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        chunks = text_splitter.split_documents(documents)
+        pages = text_splitter.split_text(text)
+        chunks = text_splitter.create_documents(pages)
         chunked_documents = [
             {
                 "media_type": "doc",
@@ -136,9 +136,9 @@ def process_doc_file(file_path):
 def process_docx_file(file_path):
     try:
         text = read_docx_file(file_path)
-        documents = [{"page_content": text}]
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        chunks = text_splitter.split_documents(documents)
+        text_splitter = RecursiveCharacterTextSplitter(separators= [" "],chunk_size=1000, chunk_overlap=0)
+        pages = text_splitter.split_text(text)
+        chunks = text_splitter.create_documents(pages)
         chunked_documents = [
             {
                 "media_type": "docx",
@@ -302,11 +302,11 @@ file_paths = [
 #    "C:/Users/Anushka/Downloads/file_example_XLSX_10.xlsx",
 #    "C:/Users/Anushka/Downloads/speech_output.mp3",
 #   "C:/Users/Anushka/Downloads/female.wav",
-#   "C:/Users/Anushka/Downloads/ANUSHKA MAZUMDAR 2348505 - Analyze Sentiment with Natural Language API.docx",
+ "C:/Users/Anushka/Downloads/Travel Itinerary Generator Project report.docx",
 #   "C:/Users/Anushka/OneDrive/Pictures/Saved Pictures/img7.jpg"
 
 
-"C:/Users/Anushka/Downloads/mixkit-times-square-during-a-sunny-day-4442-hd-ready.mp4"
+#"C:/Users/Anushka/Downloads/mixkit-times-square-during-a-sunny-day-4442-hd-ready.mp4"
 ]
 
 all_documents = []
