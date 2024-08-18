@@ -86,46 +86,7 @@ def process_xlsx_file(file_path):
         })
     return chunked_documents
 
-# Function to process audio files
-def process_audio_file(file_path):
-    file_extension = os.path.splitext(file_path)[1].lower()
-    if file_extension not in ['.wav', '.mp3']:
-        return [{
-            "media_type": "unknown",
-            "class": "UnknownFile",
-            "properties": {"path": file_path}
-        }]
-    
-    recognizer = sr.Recognizer()
-    try:
-        with sr.AudioFile(file_path) as source:
-            audio_data = recognizer.record(source)
-            text = recognizer.recognize_google(audio_data)
-        
-        chunk_size = 1000
-        chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
-        
-        chunked_documents = [
-            {
-                "media_type": "audio",
-                "class": "AudioTextChunk",
-                "properties": {
-                    "path": file_path,
-                    "text": chunk,
-                    "chunk_length": len(chunk),
-                }
-            }
-            for chunk in chunks
-        ]
-    except Exception as e:
-        print(f"Error processing audio file {file_path}: {e}")
-        return [{
-            "media_type": "unknown",
-            "class": "UnknownFile",
-            "properties": {"path": file_path}
-        }]
-    
-    return chunked_documents
+
 
 # Function to read DOC files
 def read_doc_file(file_path):
@@ -200,6 +161,54 @@ def process_docx_file(file_path):
     
     return chunked_documents
 
+# Function to process audio files
+def process_audio_file(file_path):
+    file_extension = os.path.splitext(file_path)[1].lower()
+    if file_extension not in ['.wav', '.mp3']:
+        return [{
+            "media_type": "unknown",
+            "class": "UnknownFile",
+            "properties": {"path": file_path}
+        }]
+    
+    recognizer = sr.Recognizer()
+    try:
+        with sr.AudioFile(file_path) as source:
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data)
+        
+        chunk_size = 1000
+        chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
+        def to_base64(path):
+            with open(path, 'rb') as file:
+                return base64.b64encode(file.read()).decode('utf-8')
+        
+        audio_base64 = to_base64(file_path)
+        
+        chunked_documents = [
+            {
+                "media_type": "audio",
+                "class": "AudioTextChunk",
+                "properties": {
+                    "path": file_path,
+                    "text": chunk,
+                    "audio": audio_base64,
+                    "chunk_length": len(chunk),
+                }
+            }
+            for chunk in chunks
+        ]
+    except Exception as e:
+        print(f"Error processing audio file {file_path}: {e}")
+        return [{
+            "media_type": "unknown",
+            "class": "UnknownFile",
+            "properties": {"path": file_path}
+        }]
+    
+    return chunked_documents
+
 # Function to process image files
 def process_image_file(file_path):
     try:
@@ -225,6 +234,32 @@ def process_image_file(file_path):
     
     return result
 
+# Function to process video files
+def process_video_file(file_path):
+    try:
+        def to_base64(path):
+            with open(path, 'rb') as file:
+                return base64.b64encode(file.read()).decode('utf-8')
+        
+        video_base64 = to_base64(file_path)
+        
+        result = {
+            "path": file_path,
+            "video": video_base64,
+            "mediaType": "Video",
+        }
+        
+    except Exception as e:
+        print(f"Error processing image file {file_path}: {e}")
+        result = {
+            "path": file_path,
+            "mediaType": "unknown",
+            "error": str(e),
+        }
+    
+    return result
+
+
 # Main function to determine file type and process accordingly
 def process_file(file_path):
     file_extension = os.path.splitext(file_path)[1].lower()
@@ -247,6 +282,8 @@ def process_file(file_path):
         return process_doc_file(file_path)
     elif file_extension in ['.jpg', '.png']:
        return process_image_file(file_path)
+    elif file_extension in ['.mp4']:
+        return process_video_file(file_path)
     else:
         return [{
             "media_type": "unknown",
@@ -256,19 +293,20 @@ def process_file(file_path):
 
 # Example usage
 file_paths = [
-    "C:/Users/Anushka/OneDrive/Desktop/alice.txt", 
-    "C:/Users/Anushka/Downloads/NIPS-2017-attention-is-all-you-need-Paper.pdf",
-    "C:/Users/Anushka/Downloads/markdown-sample.md",
-    "C:/Users/Anushka/Downloads/Geographicaldata.csv",
-    "C:/Users/Anushka/Downloads/example_1.json",
-    "C:/Users/Anushka/Downloads/Local_Insight_PPT.pptx",
-   "C:/Users/Anushka/Downloads/file_example_XLSX_10.xlsx",
-   "C:/Users/Anushka/Downloads/speech_output.mp3",
-   "C:/Users/Anushka/Downloads/female.wav",
-  "C:/Users/Anushka/Downloads/ANUSHKA MAZUMDAR 2348505 - Analyze Sentiment with Natural Language API.docx",
-  "C:/Users/Anushka/OneDrive/Pictures/Saved Pictures/img7.jpg"
+#     "C:/Users/Anushka/OneDrive/Desktop/alice.txt", 
+#     "C:/Users/Anushka/Downloads/NIPS-2017-attention-is-all-you-need-Paper.pdf",
+#     "C:/Users/Anushka/Downloads/markdown-sample.md",
+#     "C:/Users/Anushka/Downloads/Geographicaldata.csv",
+#     "C:/Users/Anushka/Downloads/example_1.json",
+#     "C:/Users/Anushka/Downloads/Local_Insight_PPT.pptx",
+#    "C:/Users/Anushka/Downloads/file_example_XLSX_10.xlsx",
+#    "C:/Users/Anushka/Downloads/speech_output.mp3",
+#   "C:/Users/Anushka/Downloads/female.wav",
+#   "C:/Users/Anushka/Downloads/ANUSHKA MAZUMDAR 2348505 - Analyze Sentiment with Natural Language API.docx",
+#   "C:/Users/Anushka/OneDrive/Pictures/Saved Pictures/img7.jpg"
 
 
+"C:/Users/Anushka/Downloads/mixkit-times-square-during-a-sunny-day-4442-hd-ready.mp4"
 ]
 
 all_documents = []
