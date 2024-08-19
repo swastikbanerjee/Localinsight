@@ -25,7 +25,7 @@ class DataLoader:
         chunks = text_splitter.split_documents(documents)
         return [
             {
-                "chunk_no": idx,
+                "chunk_no": int(idx),
                 "text": chunk.page_content,
                 "path": file_path,
                 "media_type": "text"
@@ -43,7 +43,7 @@ class DataLoader:
         chunks = text_splitter.split_documents(documents)
         return [
             {
-                "chunk_no": idx,
+                "chunk_no": int(idx),
                 "text": chunk.page_content,
                 "path": file_path,
                 "media_type": "pdf"
@@ -61,7 +61,7 @@ class DataLoader:
         chunks = text_splitter.split_documents(documents)
         return [
             {
-                "chunk_no": idx,
+                "chunk_no": int(idx),
                 "text": chunk.page_content,
                 "path": file_path,
                 "media_type": "pptx"
@@ -96,7 +96,7 @@ class DataLoader:
             chunks = text_splitter.split_text(text)
             return [
                 {
-                    "chunk_no": idx,
+                    "chunk_no": int(idx),
                     "text": chunk,
                     "path": file_path,
                     "media_type": "doc"
@@ -119,7 +119,7 @@ class DataLoader:
             chunks = text_splitter.split_text(text)
             return [
                 {
-                    "chunk_no": idx,
+                    "chunk_no": int(idx),
                     "text": chunk,
                     "path": file_path,
                     "media_type": "docx"
@@ -140,7 +140,7 @@ class DataLoader:
 
             return [
                 {
-                    "chunk_no": idx,
+                    "chunk_no": int(idx),
                     "text": chunk,
                     "path": file_path,
                     "media_type": "audio"
