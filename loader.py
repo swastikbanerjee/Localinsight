@@ -1,7 +1,6 @@
 import os
 import base64
 import pandas as pd
-# import cv2
 import json
 import xml.etree.ElementTree as ET
 from docx import Document
@@ -13,7 +12,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pprint import pprint
 
 class DataLoader:
-    def __init__(self, folder_path, chunk_size=200, chunk_overlap=50):
+    def __init__(self, folder_path, chunk_size=1000, chunk_overlap=100):
         self.folder_path = folder_path
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap

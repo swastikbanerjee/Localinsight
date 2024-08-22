@@ -1,107 +1,85 @@
-from database import DatabaseClient
-from ollama import chat, generate
+import ollama
 
-class ChatClient:
-
-    def __init__(self, folder_path,  chat_model = 'llava', transform_model = 'phi3'):
-        self.messages = []
-        self.chat_model = chat_model
-        self.transform_model = transform_model
-        self.database = DatabaseClient(folder_path)
-        
+class OfflineChat:
     
-    def retriever(self, query = None, image_path = None):
-        if image_path != None and query != None:
-            return self.database.search_with_image(image_path) + self.database.search_with_text(query)  
-        elif query == None:
-            return self.database.search_with_image(image_path)
-        elif image_path == None:
-            return self.database.search_with_text(query)
-        
-    def transform_query(self, user_content):
-        content = f"""Extract exactly 3-5 keywords from the following query, and return them in a comma-separated list with no additional text.
-        Query: "{user_content}"
-        Keywords: """
-        return generate(self.transform_model, prompt=content, options={'temperature':0})['response']
-
-    def handle_properties(self, properties):
-        context = ""
+    def __init__(self, model="phi3-rag"):
+        self.__messages = []
+        self.__model = model
+    
+    def __append_user_message(self, user_query, search_result):
+        content = ""
         image_paths = []
-        for property in properties:
-            if property['media_type'] == 'text' and property['text'] not in context:
-                context += "\n" + property['text']
-            if property['media_type'] == 'image' and property['path'] not in image_paths:
-                image_paths.append(property['path'])
-        return context, image_paths
-
-    def user_message(self, content, image_paths):
-        return {
-            'role' : 'user',
-            'content' : content,
-            'images' : image_paths
-        }
-
-    def input_text(self, user_content):
-        transfomed_query = self.transform_query(user_content)
-        context, image_paths = self.handle_properties(self.retriever(query=transfomed_query))
-        return self.user_message(
-            content=f"""Given context : {context}.
-                        The user says :  {user_content}""", 
-            image_paths=image_paths
-            )
-
-    def input_image(self, image_path):
-        context, image_paths = self.handle_properties(self.retriever(image_path=image_path))
-        if image_path not in image_paths:
-            image_paths.append(image_path)
-        return self.user_message(
-            content=f"""Explain with help of images. 
-                        Context : {context}.""", 
-            image_paths=image_paths
-            )
+        for text_properties in search_result['text']:
+            content += text_properties['text'] + "\n"
+        for image_properties in search_result['image']:
+            image_paths.append(image_properties['path'])
+        query_with_context = f"""Given Context: {content}
+                                 Query: {user_query}"""
+        self.__messages.append({"role": "user", "content": query_with_context, "images": image_paths})
     
-    def input_text_image(self, user_content, image_path):
-        transfomed_query = self.transform_query(user_content)
-        context, image_paths = self.handle_properties(self.retriever(query=transfomed_query, image_path=image_path))
-        if image_path not in image_paths:
-            image_paths.append(image_path)
-        return self.user_message(
-            content=f"""Given context : {context} and images.
-                        User says : {user_content}.""",
-            image_paths=image_paths
-        )
+    def append_assistant_message(self, content):
+        self.__messages.append({"role": "assistant", "content" : content})  
+         
+    def get_assistant_response(self, user_text, search_result):
+        """
+        Usage:
+            for chunk in get_assistant_response(...):
+                assistant_response += chunk["message"]["content"]
+                print(chunk["message"]["content"], end="", flush=True)
+            offline_chat.append_assistant_message(assistant_response)
+        """
+        self.__append_user_message(user_text, search_result)
+        return ollama.chat(self.__model, self.__messages, stream=True, options={"temperature":0})
+
+import google.generativeai as genai
+from IPython.display import Image
+
+class OnlineChat:
     
-    def interact(self):
-        print("Type /exit to end.")
-        while True:
-            user_content = input("User Content: ")
-            if user_content == "/exit":
-                self.database.close_connection()
-                break
-            user_image_path = input("User Image Path: ")
-            
-            if user_content != '' and user_image_path != '':
-                self.messages.append(self.input_text_image(
-                    user_content=user_content,
-                    image_path=user_image_path
-                ))
-            elif user_image_path == '':
-                self.messages.append(self.input_text(user_content))
-            elif user_content == '':
-                self.messages.append(self.input_image(user_image_path))
-            else:
-                continue
-            
-            assistant_content = ''
-            for chunk in chat(self.chat_model, stream=True, messages=self.messages, options={'temperature':0}):
-                assistant_content += chunk['message']['content']
-                print(chunk['message']['content'], end='', flush=True)
-            
-            print()
-            print('-'*50)
-            self.messages.append({
-                    'role' : 'assistant',
-                    'content' : assistant_content
-                })
-
-
+    def __init__(self):
+        self.__chat = self.__initiate_chat(api_key="AIzaSyBRR9GFC4eAbIa2LqLxWe0S0PjZsc1LM48")
+         
+    def __initiate_chat(self, api_key, model_name="gemini-1.5-flash-001"):
+        system_instructions = "You are a RAG Chatbot and you will only respond using the information given to you and nothing else."
+        safey_settings = [
+            {
+                "category": "HARM_CATEGORY_HARASSMENT",
+                "threshold": "BLOCK_NONE",
+            },
+            {
+                "category": "HARM_CATEGORY_HATE_SPEECH",
+                "threshold": "BLOCK_NONE",
+            },
+            {
+                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                "threshold": "BLOCK_NONE",
+            },
+            {
+                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                "threshold": "BLOCK_NONE",
+            },
+        ]
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name=model_name, 
+                                      system_instruction=system_instructions, 
+                                      safety_settings=safey_settings)
+        return model.start_chat()
+    
+    def __create_user_message(self, user_text, search_result):
+        content = ""
+        images = []
+        for text_properties in search_result['text']:
+            content += text_properties['text'] + "\n"
+        for image_properties in search_result['image']:
+            images.append(Image(image_properties['path']))
+        query_with_context = [f"Given Context: {content} \nQuery: {user_text}"] + images
+        return query_with_context
+    
+    def get_assistant_response(self, user_text, search_result):
+        """
+        Usage:
+            chat = OnlineChat(...)
+            for chunk in chat.get_assistant_response(user_text, user_image_path):
+                print(chunk.text, end="", flush=True)
+        """
+        return self.__chat.send_message(content=self.__create_user_message(user_text, search_result))#, stream=True)    
