@@ -23,32 +23,35 @@ class DatabaseClient:
     def __generate_collection(self):
         collection_name = self.__get_hashed_path()
         if self.client.collections.exists(collection_name):
-            self.collection = self.client.collections.get(self.__get_hashed_path())
-            return False
-            # self.client.collections.delete(collection_name)
+            # self.collection = self.client.collections.get(self.__get_hashed_path())
+            # return False
+            self.client.collections.delete(collection_name)
 
-        self.collection = self.client.collections.create(
-            name = self.__get_hashed_path(),
-            vectorizer_config=Configure.Vectorizer.multi2vec_clip(
-                    image_fields=[
-                        Multi2VecField(
-                                name="image"
-                        )
-                    ],
-                    text_fields=[
-                        Multi2VecField(
-                                name="text"
-                        )
-                    ]
-            )
-        )
         # self.collection = self.client.collections.create(
-        #     name=collection_name,
-        #     vectorizer_config=Configure.Vectorizer.text2vec_ollama(
-        #         api_endpoint="http://host.docker.internal:11434",
-        #         model='nomic-embed-text'
+        #     name = self.__get_hashed_path(),
+        #     vectorizer_config=Configure.Vectorizer.multi2vec_clip(
+        #             image_fields=[
+        #                 Multi2VecField(
+        #                     name="image"
+        #                 )
+        #             ],
+        #             text_fields=[
+        #                 Multi2VecField(
+        #                     name="text"
+        #                 ),
+        #                 Multi2VecField(
+        #                     name="path"
+        #                 )
+        #             ]
         #     )
         # )
+        self.collection = self.client.collections.create(
+            name=collection_name,
+            vectorizer_config=Configure.Vectorizer.text2vec_ollama(
+                api_endpoint="http://host.docker.internal:11434",
+                model='nomic-embed-text'
+            )
+        )
         return True
     
     def __data_ingestion(self):

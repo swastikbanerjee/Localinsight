@@ -30,14 +30,17 @@ class OfflineChat:
         """
         self.__append_user_message(user_text, search_result)
         return ollama.chat(self.__model, self.__messages, stream=True, options={"temperature":0})
+    
+    def get_history(self):
+        return self.__messages
 
 import google.generativeai as genai
 from IPython.display import Image
 
 class OnlineChat:
     
-    def __init__(self):
-        self.__chat = self.__initiate_chat(api_key="AIzaSyBRR9GFC4eAbIa2LqLxWe0S0PjZsc1LM48")
+    def __init__(self, api_key):
+        self.__chat = self.__initiate_chat(api_key=api_key)
          
     def __initiate_chat(self, api_key, model_name="gemini-1.5-flash-001"):
         system_instructions = "You are a RAG Chatbot and you will only respond using the information given to you and nothing else."
@@ -82,4 +85,7 @@ class OnlineChat:
             for chunk in chat.get_assistant_response(user_text, user_image_path):
                 print(chunk.text, end="", flush=True)
         """
-        return self.__chat.send_message(content=self.__create_user_message(user_text, search_result))#, stream=True)    
+        return self.__chat.send_message(content=self.__create_user_message(user_text, search_result), stream=True)    
+    
+    def get_history(self):
+        return self.__chat.history

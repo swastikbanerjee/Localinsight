@@ -22,4 +22,4 @@
 ```python
     handle_offline_response(chat, user_text, ) if mode == "offline" else handle_online_response()
 ```
-**go through bottom parts of `test_chat.ipynb` as well.**
+**go through bottom parts of `test_chat.ipynb` as well**
