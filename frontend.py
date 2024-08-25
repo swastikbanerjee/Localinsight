@@ -228,7 +228,11 @@ def handle_offline_response(chat_object:OfflineChat, user_text, search_results):
     # for chunk in chat_object.get_assistant_response(user_text, search_results):
     #     # assistant_response += chunk["message"]["content"]
     #     st.write(chunk['message']['content'], end="", flush=True)
-    response = chat_object.get_assistant_response(user_text, search_result=search_results)["message"]["content"]
+    response_generator = chat_object.get_assistant_response(user_text, search_result=search_results)
+    response_list = list(response_generator)
+    response = response_list[0]["message"]["content"]  # Adjust indexing based on your expected structure
+
+    #response = chat_object.get_assistant_response(user_text, search_result=search_results)["message"]["content"]
     st.write(response)
     st.write(str(search_results))
     chat_object.append_assistant_message(response)
