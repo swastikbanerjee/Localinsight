@@ -203,7 +203,7 @@ def handle_search():
                     with open(image_path, "wb") as f:
                         f.write(uploaded_image.getbuffer())
 
-                search_results = st.session_state['retriever'].search(text=None, image_path=image_path)
+                search_results = st.session_state['retriever'].search(text=user_query, image_path=image_path)
                 
                 # Store the search results in session state
                 st.session_state['search_results'] = search_results
