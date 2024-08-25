@@ -30,6 +30,7 @@ if 'chat' not in st.session_state:
 
 CREDENTIALS_FILE = "user_credentials.json"
 
+
 # Password Hash Function
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -260,7 +261,7 @@ def handle_online_response(chat_object:OnlineChat, user_text, search_results):
     #     st.write_stream(chunk)
     response = chat_object.get_assistant_response(user_text, search_results).text
     st.write(response)
-    st.write(str(search_results))
+    #st.write(str(search_results))
     return response
 
 # UI for main page
