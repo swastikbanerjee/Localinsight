@@ -187,15 +187,30 @@ def open_file(path):
 
 # Search Interaction Handler with Session State
 def handle_search():
+    # Text input for search query
     user_query = st.text_input("Type your search query here:", key="search_input")
     
+    # Image upload input
+    uploaded_image = st.file_uploader("Or upload an image to search:", type=["png", "jpg", "jpeg"], key="image_uploader")
+    
     if st.button("Search", key="search_send"):
-        if user_query:
-            with st.spinner("Searching..."):
-                search_results = st.session_state['retriever'].search(text=user_query, image_path=None)
+        with st.spinner("Searching..."):
+            if user_query or uploaded_image:
+                image_path = None
+                if uploaded_image:
+                    # Save the uploaded image to a temporary path
+                    image_path = f"temp_uploaded_image.{uploaded_image.name.split('.')[-1]}"
+                    with open(image_path, "wb") as f:
+                        f.write(uploaded_image.getbuffer())
+
+                search_results = st.session_state['retriever'].search(text=None, image_path=image_path)
                 
                 # Store the search results in session state
                 st.session_state['search_results'] = search_results
+                
+                # Clean up the temporary image file after search
+                if uploaded_image and os.path.exists(image_path):
+                    os.remove(image_path)
 
     # Display search results if they exist in session state
     if 'search_results' in st.session_state:
@@ -223,13 +238,17 @@ def handle_search():
 
 
 
+
 def handle_offline_response(chat_object:OfflineChat, user_text, search_results):
     # assistant_response = ""
     # for chunk in chat_object.get_assistant_response(user_text, search_results):
     #     # assistant_response += chunk["message"]["content"]
     #     st.write(chunk['message']['content'], end="", flush=True)
-   
-    response = chat_object.get_assistant_response(user_text, search_result=search_results)["message"]["content"]
+    response_generator = chat_object.get_assistant_response(user_text, search_result=search_results)
+    response_list = list(response_generator)
+    response = response_list[0]["message"]["content"]  # Adjust indexing based on your expected structure
+
+    #response = chat_object.get_assistant_response(user_text, search_result=search_results)["message"]["content"]
     st.write(response)
     st.write(str(search_results))
     chat_object.append_assistant_message(response)
