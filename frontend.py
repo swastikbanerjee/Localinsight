@@ -140,7 +140,7 @@ def initialize_clients(folder_path):
     # else:
     #     st.session_state['chat'] = OnlineChat()
     st.session_state['offline_chat'] = OfflineChat()
-    st.session_state['online_chat'] = OnlineChat(#api_key="AIzaSyBP1ylGlIC6HqNP1OLw6BYooZht6Pk84jo"
+    st.session_state['online_chat'] = OnlineChat(#api_key=""
         )
 
 # Chat Interactions - 
