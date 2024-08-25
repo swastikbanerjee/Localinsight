@@ -140,7 +140,7 @@ def initialize_clients(folder_path):
     # else:
     #     st.session_state['chat'] = OnlineChat()
     st.session_state['offline_chat'] = OfflineChat()
-    st.session_state['online_chat'] = OnlineChat(#api_key=""
+    st.session_state['online_chat'] = OnlineChat(#api_key="AIzaSyBP1ylGlIC6HqNP1OLw6BYooZht6Pk84jo"
         )
 
 # Chat Interactions - 
@@ -167,43 +167,59 @@ def handle_chat():
 # Search Interactions 
 # Main Streamlit App
 
+# Function to open files with better error handling
+def open_file(path):
+    try:
+        # Ensure the path exists
+        if not os.path.exists(path):
+            st.error(f"File not found: {path}")
+            return
+
+        # Attempt to open the file with the default application
+        if os.name == 'nt':  # For Windows
+            os.startfile(path)
+        elif os.name == 'posix':  # For macOS or Linux
+            os.system(f'open "{path}"' if 'darwin' in os.uname().sysname.lower() else f'xdg-open "{path}"')
+        else:
+            st.warning("Your operating system may not support this operation.")
+    except Exception as e:
+        st.error(f"Failed to open the file: {e}")
+
+# Search Interaction Handler with Session State
 def handle_search():
     user_query = st.text_input("Type your search query here:", key="search_input")
+    
     if st.button("Search", key="search_send"):
         if user_query:
             with st.spinner("Searching..."):
                 search_results = st.session_state['retriever'].search(text=user_query, image_path=None)
-            
-            st.subheader("Search Results:")
-            file_paths = []
-            image_paths = []
-            
-            for result in search_results['text']:
-                if result['path'] not in file_paths:
-                    file_paths.append(result['path'])
-            
-            for result in search_results['image']:
-                if result['path'] not in image_paths:
-                    image_paths.append(result['path'])
-            
-            # Display text files
-            for path in file_paths:
-                st.write(f"**Found Text File:** {os.path.basename(path)}")
-                if st.button(f"Open: {os.path.basename(path)}", key=f"open_{path}"):
-                    try:
-                        if os.name == 'nt':  # For Windows
-                            os.startfile(path)
-                        elif os.name == 'posix':  # For macOS or Linux
-                            os.system(f'open "{path}"')
-                        else:
-                            st.warning("Your operating system may not support this operation.")
-                    except Exception as e:
-                        st.error(f"Failed to open the file: {e}")
-            
-            # Display images
-            for image_path in image_paths:
-                st.image(image_path, caption=os.path.basename(image_path), use_column_width=True)
+                
+                # Store the search results in session state
+                st.session_state['search_results'] = search_results
 
+    # Display search results if they exist in session state
+    if 'search_results' in st.session_state:
+        search_results = st.session_state['search_results']
+        st.subheader("Search Results:")
+        
+        file_paths = []
+        image_paths = []
+        for result in search_results['text']:
+            if result['path'] not in file_paths:
+                file_paths.append(result['path'])
+        for result in search_results['image']:
+            if result['path'] not in image_paths:
+                image_paths.append(result['path'])
+
+        # Display text files
+        for path in file_paths:
+            st.write(f"**Found:** {os.path.basename(path)}")
+            if st.button(f"Open: {os.path.basename(path)}", key=f"open_{path}"):
+                open_file(path)
+        
+        # Display images
+        for image_path in image_paths:
+            st.image(image_path, caption=os.path.basename(image_path), use_column_width=True)
 
 
 
