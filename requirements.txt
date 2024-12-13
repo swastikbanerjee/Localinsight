@@ -1,9 +1,0 @@
-streamlit
-langchain
-langchain_community
-PyPDF2 
-pandas 
-python-docx 
-pywin32
-openpyxl
-python-pptx
